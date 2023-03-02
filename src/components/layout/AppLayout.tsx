@@ -4,18 +4,15 @@ import Button from "@mui/material/Button";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Container from '@mui/material/Container'
+import { AppLoadingBar } from "./AppLoadingBar";
 
-type Layoutprops = {
-    children: React.ReactNode,
-};
-
-const AppLayout: React.FC<Layoutprops> = (props) => 
-{
+const AppLayout: React.FCWC = (props) => {
     return (
-        <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="fixed" component="nav">
-                <Container maxWidth="lg">
-                    <Toolbar>
+        <Box sx={{ height: '100vh', width: '100%', overflow: 'auto' }}>
+            <AppLoadingBar />
+            <AppBar position="static" component="nav">
+                <Container>
+                    <Toolbar disableGutters>
                         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                             Mis Cuentas
                         </Typography>
@@ -23,8 +20,10 @@ const AppLayout: React.FC<Layoutprops> = (props) =>
                     </Toolbar>
                 </Container>
             </AppBar>
-            <Box component="main" sx={{height: '100vh', width: '100%'}}>
-                { props.children }
+            <Box component="main" sx={{mt: 2}}>
+                <Container maxWidth="lg">
+                    { props.children }
+                </Container>
             </Box>
         </Box>
     );
