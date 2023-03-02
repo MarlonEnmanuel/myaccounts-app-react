@@ -2,7 +2,7 @@ import client from "../client";
 import { InputPaymentDto } from "../models/InputPaymentDto";
 import { PaymentDto } from "../models/PaymentDto";
 
-const URL = "/api/payment";
+const URL = "api/payment";
 
 const getList = async (signal?:AbortSignal) => {
     const resp = await client.get<PaymentDto[]>(URL, { signal });
@@ -15,7 +15,7 @@ const create = async (data:InputPaymentDto, signal?:AbortSignal) => {
 };
 
 const update = async (data:InputPaymentDto, signal?:AbortSignal) => {
-    const url = `${URL}/${data.Id}`;
+    const url = `${URL}/${data.id}`;
     const resp = await client.put<PaymentDto>(url, data, { signal });
     return resp.data;
 };

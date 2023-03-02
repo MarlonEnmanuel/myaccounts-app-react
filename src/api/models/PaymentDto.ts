@@ -2,24 +2,24 @@ import { PaymentType } from "./PaymentType";
 
 export interface PaymentDto
 {
-    Id: number;
-    CardId: number;
-    Type: PaymentType;
-    Date: string;
-    Detail: string;
-    Comment: string;
-    CreditFees: number|null;
-    CreditAmount: number|null;
-    Amount: number;
-    PaymentSplits: PaymentSplitDto[];
-    CreatedBy: number;
-    UpdatedBy: number;
-    CreatedDate: string;
-    UpdatedDate: string;
+    id: number;
+    cardId: number;
+    type: PaymentType;
+    date: string;
+    detail: string;
+    comment: string;
+    creditFees: number|null;
+    creditAmount: number|null;
+    amount: number;
+    paymentSplits: PaymentSplitDto[];
+    createdBy: number;
+    updatedBy: number;
+    createdDate: string;
+    updatedDate: string;
 }
 
 export interface PaymentSplitDto
 {
-    PersonId: number;
-    Amount: number;
+    personId: number;
+    amount: number;
 }

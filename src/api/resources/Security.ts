@@ -1,7 +1,6 @@
-import { CancelToken } from "axios"
 import client, { setBearerToken, unsetBearerToken } from "../client";
 
-const URL = "/api/security";
+const URL = "api/security";
 
 const login = async (userKey:string, signal?:AbortSignal) => {
     const url = `${URL}/login`;

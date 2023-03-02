@@ -2,19 +2,19 @@ import { PaymentType } from "./PaymentType";
 
 export interface InputPaymentDto 
 {
-    Id: number;
-    CardId: number;
-    Type: PaymentType;
-    Date: string;
-    Detail: string;
-    Comment: string;
-    CreditFees: number|null;
-    CreditAmount: number|null;
-    PaymentSplits: InputPaymentSplitDto[];
+    id: number;
+    cardId: number;
+    type: PaymentType;
+    date: string;
+    detail: string;
+    comment: string;
+    creditFees: number|null;
+    creditAmount: number|null;
+    caymentSplits: InputPaymentSplitDto[];
 }
 
 export interface InputPaymentSplitDto
 {
-    PersonId: number;
-    Amount: number;
+    personId: number;
+    amount: number;
 }

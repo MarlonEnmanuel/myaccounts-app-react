@@ -1,6 +1,6 @@
 
 export enum PaymentType
 {
-    Debit = 1,
-    Credit = 2,
+    debit = 1,
+    credit = 2,
 }
