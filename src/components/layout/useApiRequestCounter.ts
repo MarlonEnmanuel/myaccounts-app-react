@@ -12,7 +12,7 @@ export const useApiRequestCounter = () => {
             return config;
         }, error => {
             setRequestCount(count => count - 1);
-            Promise.reject(error);
+            return Promise.reject(error);
         });
 
         const resId = client.interceptors.response.use(response => {
@@ -20,7 +20,7 @@ export const useApiRequestCounter = () => {
             return response;
         }, error => {
             setRequestCount(count => count - 1);
-            Promise.reject(error);
+            return Promise.reject(error);
         });
 
         return () => {
