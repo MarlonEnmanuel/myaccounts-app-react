@@ -8,8 +8,8 @@ export interface PaymentDto
     date: string;
     detail: string;
     comment: string;
-    creditFees: number|null;
-    creditAmount: number|null;
+    creditFees?: number;
+    creditAmount?: number;
     amount: number;
     paymentSplits: PaymentSplitDto[];
     createdBy: number;

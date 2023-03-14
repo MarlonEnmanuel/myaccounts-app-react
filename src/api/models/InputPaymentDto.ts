@@ -8,9 +8,9 @@ export interface InputPaymentDto
     date: string;
     detail: string;
     comment: string;
-    creditFees: number|null;
-    creditAmount: number|null;
-    caymentSplits: InputPaymentSplitDto[];
+    creditFees?: number;
+    creditAmount?: number;
+    paymentSplits: InputPaymentSplitDto[];
 }
 
 export interface InputPaymentSplitDto

@@ -4,6 +4,7 @@ import { useState } from "react";
 import API from "../../api/API";
 import { PaymentDto } from "../../api/models/PaymentDto";
 import { useSignalEffect } from "../../shared/useSignalEffect";
+import PaymentEdit from "./PaymentEdit";
 import PaymentList from "./PaymentList";
 
 const PaymentMain = () => {
@@ -31,6 +32,8 @@ const PaymentMain = () => {
     return (
         <Box>
             <PaymentList data={list}></PaymentList>
+            <br/>
+            <PaymentEdit />
         </Box>
     );
 };
