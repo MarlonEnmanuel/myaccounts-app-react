@@ -1,11 +1,9 @@
-import general from "./resources/General";
-import payments from "./resources/Payments";
-import security from "./resources/Security";
+import { general, payments, security } from "./resources";
 
-const API = {
+export const API = {
     security,
     general,
     payments,
 };
 
-export default API;
+export type ApiRequest<TInput, TResponse> = (input:TInput, signal?:AbortSignal) => Promise<TResponse>;

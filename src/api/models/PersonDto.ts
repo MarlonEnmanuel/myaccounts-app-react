@@ -1,7 +1,7 @@
 
 export interface PersonDto {
-    Id: number,
-    Name: string,
-    UserId: number,
-    IsUser: boolean,
+    id: number,
+    name: string,
+    userId: number,
+    isUser: boolean,
 };

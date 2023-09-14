@@ -1,19 +1,20 @@
+import { Dayjs } from "dayjs";
 import { PaymentType } from "./PaymentType";
 
-export interface InputPaymentDto 
+export interface SavePaymentDto 
 {
     id: number;
-    cardId: number;
+    date: string|Dayjs;
     type: PaymentType;
-    date: string;
+    cardId: number;
     detail: string;
     comment: string;
     creditFees?: number;
     creditAmount?: number;
-    paymentSplits: InputPaymentSplitDto[];
+    paymentSplits: SavePaymentSplitDto[];
 }
 
-export interface InputPaymentSplitDto
+export interface SavePaymentSplitDto
 {
     personId: number;
     amount: number;

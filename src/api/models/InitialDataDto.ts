@@ -5,6 +5,7 @@ export interface InitialDataDto {
     user: {
         id: number,
         name: string,
+        personId: number,
     },
     persons: PersonDto[],
     cards: CardDto[],

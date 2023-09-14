@@ -12,9 +12,7 @@ const logout = () => {
     unsetBearerToken();
 }
 
-const security = {
+export const security = {
     login,
     logout,
 };
-
-export default security;
