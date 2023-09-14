@@ -5,8 +5,17 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Container from '@mui/material/Container'
 import { AppLoadingBar } from "./AppLoadingBar";
+import { Navigate, Outlet } from "react-router-dom";
+import { useGlobalDataContext } from "../../context";
 
-const AppLayout: React.FCWC = (props) => {
+const AppLayout: React.FC = () => {
+
+    const { user } = useGlobalDataContext();
+
+    if (!user.id) {
+        return <Navigate to="/login" />;
+    }
+
     return (
         <Box sx={{ height: '100vh', width: '100%', overflow: 'auto' }}>
             <AppLoadingBar />
@@ -22,7 +31,7 @@ const AppLayout: React.FCWC = (props) => {
             </AppBar>
             <Box component="main" sx={{mt: 2}}>
                 <Container maxWidth="lg">
-                    { props.children }
+                    <Outlet />
                 </Container>
             </Box>
         </Box>

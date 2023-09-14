@@ -1,10 +1,9 @@
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { InitialDataContextProvider, useInitialDataContext } from "../context/InitialDataContext";
-import AppLayout from "./layout/AppLayout"
-import AutoLogin from "./login/AutoLogin";
-import AutoLoginError from "./login/AutoLoginError";
+import { InitialDataContextProvider } from "../context";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import AppLayout from "./layout/AppLayout";
+import AppLogin from "./AppLogin";
 import PaymentMain from "./payments/PaymentMain";
 import 'dayjs/locale/es-mx';
 
@@ -21,14 +20,13 @@ const App: React.FC = () => {
 };
 
 const AppRoutes: React.FC = () => {
-    const { initialData } = useInitialDataContext();
     return (
-        <AppLayout>
-            <Routes>
-                <Route path="/:userKey" element={<AutoLogin />} />
-                <Route path="/" element={initialData.user.id ? <PaymentMain /> : <AutoLoginError />} />
-            </Routes>
-        </AppLayout>
+        <Routes>
+            <Route path="/login" element={<AppLogin />} />
+            <Route element={<AppLayout />}>
+                <Route path="/" element={<PaymentMain />} />
+            </Route>
+        </Routes>
     );
 };
 

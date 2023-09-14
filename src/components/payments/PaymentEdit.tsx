@@ -1,4 +1,4 @@
-import { PaymentDto } from "../../api/models/PaymentDto";
+import { PaymentDto } from "../../api/models";
 import PaymentForm from "./edit/PaymentForm";
 
 type PaymentEditProps = {

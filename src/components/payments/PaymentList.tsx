@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import { DataGrid } from "@mui/x-data-grid";
-import { PaymentDto } from "../../api/models/PaymentDto";
 import { GridColsObj, GridRowsObj } from "../../shared/types";
+import { PaymentDto } from "../../api/models";
 
 type PaymentListProps = {
     data?: PaymentDto[],
@@ -23,7 +23,7 @@ const PaymentList: React.FCWC<PaymentListProps> = (props) => {
         <Box>
             {props.data ?
                 <DataGrid rows={rows} columns={columns} autoHeight />
-            :
+            :   
                 <DataGrid rows={[]} columns={columns} autoHeight />
             }
         </Box>
