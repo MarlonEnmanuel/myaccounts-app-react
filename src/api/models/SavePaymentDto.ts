@@ -1,10 +1,9 @@
-import { Dayjs } from "dayjs";
 import { PaymentType } from "./PaymentType";
 
 export interface SavePaymentDto 
 {
     id: number;
-    date: string|Dayjs;
+    date: string;
     type: PaymentType;
     cardId: number;
     detail: string;
