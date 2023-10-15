@@ -1,12 +1,9 @@
 import { CardDto } from "./CardDto";
 import { PersonDto } from "./PersonDto";
+import { UserDto } from "./UserDto";
 
 export interface InitialDataDto {
-    user: {
-        id: number,
-        name: string,
-        personId: number,
-    },
+    loguedUser: UserDto,
     persons: PersonDto[],
     cards: CardDto[],
 }

@@ -1,45 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "../api";
-
-export enum RequestMode {
-    Fetch,
-    Submit,
-};
 
 export type RequestHandler = (signal:AbortSignal) => Promise<void>;
 
-export function useRequestControl (
-    mode: RequestMode,
-    defaultHandler?: RequestHandler,
-    ejecuteOnInit:boolean = false,
-){
+export function useRequestControl (){
+
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<ApiError>();
-    const abortCtrl = useRef<AbortController>();
+    const [abortCtrl, setAbortCtrl] = useState<AbortController>();
 
-    const request = useCallback(async (handler?:RequestHandler) => {
-
-        const requestHandler = handler ?? defaultHandler;
-        if (!requestHandler) {
-            throw new Error("Should pass an handler or define defaultHandler");
-        }
-
-        if (isLoading && mode === RequestMode.Fetch) {
-            abortCtrl.current?.abort();
-        }
-        if (isLoading && mode === RequestMode.Submit) {
-            return;
-        }
-
+    const request = useCallback(async (requestHandler:RequestHandler) => {
+        
+        const newAbortCtrl = new AbortController();
         setError(undefined);
         setIsLoading(true);
-        abortCtrl.current = new AbortController();
+        setAbortCtrl(newAbortCtrl);
 
         try {
-            requestHandler(abortCtrl.current.signal);
+            await requestHandler(newAbortCtrl.signal);
         }
         catch(error:any) {
-            if (abortCtrl.current.signal.aborted) {
+            if (newAbortCtrl.signal.aborted) {
                 return;
             }
             if (error.response) {
@@ -53,21 +34,18 @@ export function useRequestControl (
         }
         finally {
             setIsLoading(false);
-            abortCtrl.current = undefined;
+            setAbortCtrl(undefined);
         }
 
-    }, [isLoading, mode, setError, setIsLoading, defaultHandler]);
+    }, [setError, setIsLoading, setAbortCtrl]);
 
     const cancel = useCallback(() => {
-        abortCtrl?.current?.abort();
-    }, []);
+        abortCtrl?.abort();
+    }, [abortCtrl]);
 
     useEffect(() => {
-        if (ejecuteOnInit) {
-            request();
-        }
         return () => cancel();
-    }, [ejecuteOnInit, request, cancel]);
+    }, [cancel]);
 
     return { isLoading, error, request, cancel };
 };

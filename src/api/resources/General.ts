@@ -3,9 +3,9 @@ import { InitialDataDto } from "../models";
 
 const URL = "api/general";
 
-const getInitialData = async (data:{}, signal?:AbortSignal) => {
+const getInitialData = async (signal?:AbortSignal) => {
     const url = `${URL}/initial`;
-    const resp = await client.get<InitialDataDto>(url, { data, signal });
+    const resp = await client.get<InitialDataDto>(url, { signal });
     return resp.data;
 };
 

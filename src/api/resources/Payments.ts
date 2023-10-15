@@ -3,8 +3,8 @@ import { SavePaymentDto, PaymentDto } from "../models";
 
 const URL = "api/payment";
 
-const getList = async (data:{}, signal?:AbortSignal) => {
-    const resp = await client.get<PaymentDto[]>(URL, { data, signal });
+const getList = async (signal?:AbortSignal) => {
+    const resp = await client.get<PaymentDto[]>(URL, { signal });
     return resp.data;
 };
 

@@ -1,104 +1,246 @@
-import { Button, Checkbox, FormControlLabel, FormGroup, Grid, Typography } from "@mui/material";
+import { Button, Chip, FormControl, FormHelperText, Grid, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
+import { Controller, SubmitErrorHandler, SubmitHandler, useFieldArray, useForm } from "react-hook-form";
+import { PaymentFormSchema, PaymentFormSchemaType } from "./validationSheme";
+import { zodResolver } from '@hookform/resolvers/zod';
 import { DatePicker } from "@mui/x-date-pickers";
-import { InputRadio, InputSelect, InputText, InputTextNumber } from "../../../shared/inputs";
-import { SavePaymentSplitDto, PaymentDto, PaymentType } from "../../../api";
-import { usePaymentForm } from "./usePaymentForm";
-import React, { Fragment } from "react";
-import { Bookmark as BookmarkIcon, Delete as DeleteIcon, PersonAdd as PersonAddIcon } from "@mui/icons-material";
+import dayjs from "dayjs";
+import { API, PaymentDto, PaymentType } from "../../../api";
+import { Fragment, useCallback } from "react";
+import { Bookmark, Delete, PersonAdd } from "@mui/icons-material";
+import { useGlobalDataContext } from "../../../context";
+import { useRequestControl } from "../../../shared/useRequestControl";
 
-export interface PaymentFormProps {
-    initialDto?: PaymentDto,
-    onSave?: (response:PaymentDto) => void,
-    onFinish?: () => void,
-};
+interface PaymentFormProps {
+    onSuccess: (dto:PaymentDto) => void;
+}
 
-const PaymentForm:React.FC<PaymentFormProps> = (props) => {
+const PaymentForm: React.FC<PaymentFormProps> = ({ onSuccess }) => {
 
-    const { inputHandler, catalogs, ...ctrl } = usePaymentForm(props);
+    const { loguedUser, cards, persons } = useGlobalDataContext();
+    const { request, isLoading } = useRequestControl();
 
-    const inputs = {
-        cardId: inputHandler.getNumber("cardId"),
-        type: inputHandler.getNumber("type"),
-        date: inputHandler.getString("date"),
-        detail: inputHandler.getString("detail"),
-        comment: inputHandler.getString("comment"),
-        creditFees: inputHandler.getNumber("creditFees"),
-        creditAmount: inputHandler.getNumber("creditAmount"),
-    };
+    const { control, handleSubmit, register, watch, formState: { errors, isSubmitting } } = useForm<PaymentFormSchemaType>({
+        resolver: zodResolver(PaymentFormSchema),
+        defaultValues: {
+            date: dayjs(),
+            paymentSplits: [{ personId: loguedUser?.personId, amount: 0 }],
+        },
+    });
 
-    const splitForms = inputHandler.getArrayHandler<SavePaymentSplitDto>("paymentSplits")
-                                    .map(handler => ({
-                                        personId: handler.getNumber("personId"),
-                                        amount: handler.getNumber("amount"),
-                                    }))
+    const paymentSplits = useFieldArray({ control, name: 'paymentSplits' });
+
+    const currentType = cards.find(c => c.id === watch('cardId'))?.type;
+    const currentTotal = watch('paymentSplits')
+                            .map(s => parseFloat(s.amount.toString()))
+                            .filter(s => !isNaN(s))
+                            .reduce((a, b) => a + b, 0);
+
+    const submitHandler: SubmitHandler<PaymentFormSchemaType> = useCallback((data) => {
+        const submit = async (signal:AbortSignal) => {
+            const dto = {
+                id: 0,
+                ...data,
+                type: currentType ?? PaymentType.debit,
+                date: data.date.format('YYYY-MM-DD'),
+            };
+            const resp = await API.payments.createOrUpdate(dto, signal);
+            onSuccess(resp);
+        };
+        request(submit);
+    }, [currentType, onSuccess, request]);
+
+    const submitErrorHandler: SubmitErrorHandler<PaymentFormSchemaType> = useCallback((errors) => {
+        console.log("Error de formulario", errors);
+    }, []);
+
+    const formDisabled = isSubmitting || isLoading;
 
     return (
-        <Grid container columnSpacing={2} rowSpacing={3} component="form" autoComplete="off">
-            <Grid item xs={6}>
-                <InputRadio state={inputs.type} options={catalogs.types} label="Tipo" required />
-            </Grid>
-            <Grid item xs={6}>
-                <DatePicker label="Fecha de compra" sx={{width: '100%'}} />
-            </Grid>
-            <Grid item xs={12}>
-                <InputSelect state={inputs.cardId} options={catalogs.cards} label="Tarjeta" required />
-            </Grid>
-            <Grid item xs={12}>
-                <InputText state={inputs.detail} label="Detalle" required />
-            </Grid>
-            {inputs.type.value === PaymentType.credit &&
+        <div className="PaymentForm">
+            <Grid
+                container
+                columnSpacing={2}
+                rowSpacing={3}
+                component="form"
+                noValidate
+                autoComplete="off"
+                onSubmit={handleSubmit(submitHandler, submitErrorHandler)}
+            >
+                <Grid item xs={12}>
+                    <Controller
+                        control={control}
+                        name="date"
+                        render={({ field }) => 
+                            <DatePicker {...field} label="Fecha de compra" sx={{width: '100%'}} disabled={formDisabled}/>
+                        }
+                    />
+                </Grid>
+                <Grid item xs={12}>
+                    <Controller
+                        control={control}
+                        name="cardId"
+                        render={({field, fieldState}) =>
+                            <FormControl fullWidth error={fieldState.invalid}>
+                                <InputLabel required>Tarjeta usada</InputLabel>
+                                <Select<number> 
+                                    {...field}
+                                    value={field.value ?? 0}
+                                    label="Tarjeta usada"
+                                    disabled={formDisabled}
+                                >
+                                    <MenuItem value={0} disabled>Seleccione</MenuItem>
+                                    {cards.map(c => 
+                                        <MenuItem key={c.id} value={c.id}>
+                                            <Chip label={c.isDebit ? 'Débito' : 'Crédito'} size="small"/>
+                                            &nbsp;{c.name}
+                                        </MenuItem>
+                                    )}
+                                </Select>
+                                <FormHelperText>{fieldState.error?.message}</FormHelperText>
+                            </FormControl>
+                        }
+                    />
+                </Grid>
+                <Grid item xs={12}>
+                    <TextField
+                        label="Detalle de la compra"
+                        required
+                        fullWidth
+                        error={!!errors['detail']}
+                        helperText={errors['detail']?.message}
+                        disabled={formDisabled}
+                        {...register('detail')}
+                    />
+                </Grid>
+                <Grid item xs={12}>
+                    <TextField
+                        label="Comentarios"
+                        required
+                        fullWidth
+                        error={!!errors['comment']}
+                        helperText={errors['comment']?.message}
+                        disabled={formDisabled}
+                        {...register('comment')}
+                    />
+                </Grid>
+                {currentType === PaymentType.credit &&
                 <>
-                    <Grid item xs={6}>
-                        <InputTextNumber state={inputs.creditAmount} label="Monto" required min={0} />
+                    <Grid item xs={12}>
+                        <TextField
+                            label="Número de cuotas"
+                            required
+                            fullWidth
+                            error={!!errors['creditFees']}
+                            helperText={errors['creditFees']?.message}
+                            disabled={formDisabled}
+                            {...register('creditFees')}
+                        />
                     </Grid>
-                    <Grid item xs={6}>
-                        <InputTextNumber state={inputs.creditFees} label="Cuotas" isDecimal required min={0} />
+                    <Grid item xs={12}>
+                        <TextField
+                            label="Monto de la cuota"
+                            required
+                            fullWidth
+                            error={!!errors['creditAmount']}
+                            helperText={errors['creditAmount']?.message}
+                            disabled={formDisabled}
+                            InputProps={{
+                                startAdornment: (<InputAdornment position="start">S/.</InputAdornment>),
+                                inputMode: 'decimal',
+                            }}
+                            {...register('creditAmount')}
+                        />
                     </Grid>
                 </>
-            }
-            <Grid item xs={10}>
-                <Typography>
-                    <BookmarkIcon sx={{verticalAlign: 'sub'}}/> DISTRIBUCIÓN DE MONTOS
-                </Typography>
+                }
+                <Grid item xs={10}>
+                    <Typography>
+                        <Bookmark sx={{verticalAlign: 'sub'}}/> DISTRIBUCIÓN DEL PAGO
+                    </Typography>
+                </Grid>
+                <Grid item xs={2}>
+                    <Button
+                        fullWidth
+                        variant="outlined"
+                        onClick={() => paymentSplits.append({personId: undefined!, amount: 0})}
+                        disabled={formDisabled || paymentSplits.fields.length >= persons.length}
+                    >
+                        <PersonAdd />
+                    </Button>
+                </Grid>
+                {paymentSplits.fields.map((split, index) =>
+                    <Fragment key={split.id}>
+                        <Grid item xs={5}>
+                            <Controller
+                                control={control}
+                                name={`paymentSplits.${index}.personId`}
+                                render={({field, fieldState}) =>
+                                    <FormControl fullWidth error={fieldState.invalid}>
+                                        <InputLabel required>Persona</InputLabel>
+                                        <Select<number>
+                                            {...field}
+                                            value={field.value ?? 0}
+                                            label="Persona"
+                                            disabled={formDisabled}
+                                        >
+                                            <MenuItem value={0} disabled>Seleccione</MenuItem>
+                                            {persons.map(p => 
+                                                <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+                                            )}
+                                        </Select>
+                                        <FormHelperText>{fieldState.error?.message}</FormHelperText>
+                                    </FormControl>
+                                }
+                            />
+                        </Grid>
+                        <Grid item xs={5}>
+                            <TextField
+                                label="Monto"
+                                required
+                                fullWidth
+                                error={!!errors['paymentSplits']}
+                                helperText={errors['paymentSplits'] && errors['paymentSplits'][index]?.amount?.message}
+                                InputProps={{
+                                    startAdornment: (<InputAdornment position="start">S/.</InputAdornment>),
+                                }}
+                                disabled={formDisabled}
+                                {...register(`paymentSplits.${index}.amount`)}
+                            />
+                        </Grid>
+                        <Grid item xs={2}>
+                            <Button
+                                fullWidth
+                                variant="text"
+                                sx={{height: '4em'}}
+                                onClick={() => paymentSplits.remove(index)}
+                                disabled={formDisabled || index === 0}
+                            >
+                                <Delete />
+                            </Button>
+                        </Grid>
+                    </Fragment>
+                )}
+                <Grid item xs={5}>
+
+                </Grid>
+                <Grid item xs={5}>
+                    <Typography><b>Total S/. { currentTotal }</b></Typography>
+                </Grid>
+                <Grid item xs={12}>
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        color="primary"
+                        size="large"
+                        type="submit"
+                        disabled={isSubmitting}
+                    >
+                        GUARDAR
+                    </Button>
+                </Grid>
             </Grid>
-            <Grid item xs={2} textAlign="right">
-                <Button fullWidth variant="outlined" onClick={ctrl.addSplit}>
-                    <PersonAddIcon />
-                </Button>
-            </Grid>
-            {splitForms.map((split, index) =>
-                <Fragment key={index}>
-                    <Grid item xs={5}>
-                        <InputSelect state={split.personId} options={catalogs.persons} label="Corresponde a" required />
-                    </Grid>
-                    <Grid item xs={5}>
-                        <InputTextNumber state={split.amount} label="Monto" isDecimal required min={0} />
-                    </Grid>
-                    <Grid item xs={2}>
-                        <Button fullWidth variant="outlined" sx={{height: '4em'}} onClick={ctrl.removeSplit.bind(null, index)}>
-                            <DeleteIcon/>
-                        </Button>
-                    </Grid>
-                </Fragment>
-            )}
-            <Grid item xs={6}>
-                <FormGroup>
-                    <FormControlLabel control={<Checkbox />} label="Seguir registrando" />
-                </FormGroup>
-            </Grid>
-            <Grid item xs={6} alignSelf={"center"}>
-                <Typography>
-                    Total: S/. {ctrl.totalAmount}
-                </Typography>
-            </Grid>
-            <Grid item xs={6}>
-                <Button fullWidth variant="outlined" size="large" onClick={props.onFinish}>REGRESAR</Button>
-            </Grid>
-            <Grid item xs={6}>
-                <Button fullWidth variant="contained" color="primary" size="large" onClick={ctrl.handleSubmit}>GUARDAR</Button>
-            </Grid>
-        </Grid>
+        </div>
     );
-};
+}
 
 export default PaymentForm;

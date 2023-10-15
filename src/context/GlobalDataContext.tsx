@@ -1,27 +1,22 @@
-import { createContext, useContext } from "react";
-import { API, InitialDataDto } from "../api";
-import { useApiSubmit } from "../shared/useApiRequest";
+import { Dispatch, SetStateAction, createContext, useContext, useState } from "react";
+import { InitialDataDto } from "../api";
 
-interface GlobalDataContextType extends InitialDataDto {
-    loadGlobalData: () => Promise<void>
+interface GlobalDataContextType {
+    globalData?: InitialDataDto,
+    setGlobalData: Dispatch<SetStateAction<InitialDataDto|undefined>>,
 };
 
-const defaultValue: GlobalDataContextType = {
-    user: {id: 0, name: '', personId: 0}, 
-    persons: [], 
-    cards: [], 
-    loadGlobalData: async () => {},
-}
-
-const InitialDataContext = createContext<GlobalDataContextType>(defaultValue);
+const InitialDataContext = createContext<GlobalDataContextType>({
+    setGlobalData: async () => {},
+});
 
 export const InitialDataContextProvider: React.FCWC = (props) => {
 
-    const { result, submit } = useApiSubmit(API.general.getInitialData);
+    const [data, setData] = useState<InitialDataDto>();
 
-    var providerValue = {
-        ...(result ?? defaultValue),
-        loadGlobalData: async () => await submit({}),
+    var providerValue:GlobalDataContextType = {
+        globalData: data,
+        setGlobalData: setData,
     };
 
     return (
@@ -31,4 +26,12 @@ export const InitialDataContextProvider: React.FCWC = (props) => {
     );
 };
 
-export const useGlobalDataContext = () => useContext(InitialDataContext);
+export const useGlobalDataContext = () => {
+    var { globalData, setGlobalData } = useContext(InitialDataContext);
+    return {
+        setGlobalData,
+        ...globalData,
+        cards: globalData?.cards ?? [],
+        persons: globalData?.persons ?? [],
+    };
+};

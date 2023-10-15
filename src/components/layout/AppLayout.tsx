@@ -10,9 +10,9 @@ import { useGlobalDataContext } from "../../context";
 
 const AppLayout: React.FC = () => {
 
-    const { user } = useGlobalDataContext();
+    const { loguedUser } = useGlobalDataContext();
 
-    if (!user.id) {
+    if (!loguedUser) {
         return <Navigate to="/login" />;
     }
 

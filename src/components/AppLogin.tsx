@@ -1,32 +1,36 @@
 import { Button, CircularProgress, Grid, TextField, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { API } from "../api";
-import { FCWC, FormEvent, useState } from "react";
+import { FCWC, FormEvent, useCallback, useState } from "react";
 import { useGlobalDataContext } from "../context";
-import { useApiSubmit } from "../shared/useApiRequest";
-
+import { useRequestControl } from "../shared/useRequestControl";
+import { API, setBearerToken } from "../api";
 
 const AppLogin: React.FC = () => {
 
+    const [password, setPassword] = useState<string>("");
+    const { setGlobalData } = useGlobalDataContext();
+
+    const submitCtrl = useRequestControl();
     const navigate = useNavigate();
-    const [ password, setPassword ] = useState<string>("");
-    const { isLoading, error, submit } = useApiSubmit(API.security.login, true);
-    const { loadGlobalData } = useGlobalDataContext();
 
-    const handleSubmit = async function(ev: FormEvent<HTMLFormElement>) {
+    const submiLogin = useCallback(async (signal:AbortSignal) => {
+        if (!password) return;
+
+        const token = await API.security.login(password);
+        setBearerToken(token);
+
+        const globalData = await API.general.getInitialData(signal);
+        setGlobalData(globalData);
+
+        navigate("/");
+    }, [password, setGlobalData, navigate]);
+
+    const handleSubmit = useCallback((ev:FormEvent) => {
         ev.preventDefault();
+        submitCtrl.request(submiLogin);
+    }, [submitCtrl, submiLogin]);
 
-        if(!password) return;
-        if (isLoading) return;
-
-        try {
-            await submit(password);
-            await loadGlobalData();
-            navigate("/");
-        } catch {}
-    };
-
-    if (isLoading) {
+    if (submitCtrl.isLoading) {
         return (
             <LoginContainer>
                 <CircularProgress />
@@ -48,7 +52,7 @@ const AppLogin: React.FC = () => {
                     <TextField
                         required 
                         label="DNI" 
-                        value={password} 
+                        value={password}
                         onChange={ev => setPassword(ev.target.value)}
                         fullWidth />
                 </Grid>
@@ -63,9 +67,10 @@ const AppLogin: React.FC = () => {
                     </Button>
                 </Grid>
                 <Grid item xs={12} textAlign="center">
-                    {!!error  && 
+                    {!!submitCtrl.error  && 
                         <Typography color="red">
-                            Ocurrió un error
+                            Ocurrió un error <br/>
+                            { submitCtrl.error.title }
                         </Typography>
                     }
                 </Grid>
