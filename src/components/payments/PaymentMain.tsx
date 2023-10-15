@@ -14,7 +14,6 @@ const PaymentMain = () => {
     const { request, isLoading } = useRequestControl();
 
     const fetchData = useCallback(async (signal:AbortSignal) => {
-        debugger;
         var resp = await API.payments.getList(signal);
         setData(resp);
     }, [setData]);

@@ -1,6 +1,6 @@
 import { Button, CircularProgress, Grid, TextField, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { FCWC, FormEvent, useCallback, useState } from "react";
+import { FCWC, FormEvent, useCallback, useEffect, useState } from "react";
 import { useGlobalDataContext } from "../context";
 import { useRequestControl } from "../shared/useRequestControl";
 import { API, setBearerToken } from "../api";
@@ -10,27 +10,41 @@ const AppLogin: React.FC = () => {
     const [password, setPassword] = useState<string>("");
     const { setGlobalData } = useGlobalDataContext();
 
-    const submitCtrl = useRequestControl();
+    const { request, isLoading, error } = useRequestControl();
     const navigate = useNavigate();
+
+    const initializeApp = useCallback(async (signal:AbortSignal) => {
+        const globalData = await API.general.getInitialData(signal);
+        setGlobalData(globalData);
+        navigate("/");
+    }, [setGlobalData, navigate]);
 
     const submiLogin = useCallback(async (signal:AbortSignal) => {
         if (!password) return;
 
         const token = await API.security.login(password);
+        sessionStorage.setItem("AuthToken", token);
         setBearerToken(token);
 
-        const globalData = await API.general.getInitialData(signal);
-        setGlobalData(globalData);
-
-        navigate("/");
-    }, [password, setGlobalData, navigate]);
+        await initializeApp(signal);
+    }, [password, initializeApp]);
 
     const handleSubmit = useCallback((ev:FormEvent) => {
         ev.preventDefault();
-        submitCtrl.request(submiLogin);
-    }, [submitCtrl, submiLogin]);
+        request(submiLogin);
+    }, [request, submiLogin]);
 
-    if (submitCtrl.isLoading) {
+    useEffect(() => {
+        var token = sessionStorage.getItem("AuthToken");
+        if (token == null) {
+            return;
+        }
+        setBearerToken(token);
+        
+        request(initializeApp);
+    }, [request, initializeApp])
+
+    if (isLoading) {
         return (
             <LoginContainer>
                 <CircularProgress />
@@ -67,10 +81,10 @@ const AppLogin: React.FC = () => {
                     </Button>
                 </Grid>
                 <Grid item xs={12} textAlign="center">
-                    {!!submitCtrl.error  && 
+                    {!!error  && 
                         <Typography color="red">
                             Ocurrió un error <br/>
-                            { submitCtrl.error.title }
+                            { error.title }
                         </Typography>
                     }
                 </Grid>
