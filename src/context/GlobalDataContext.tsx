@@ -1,22 +1,22 @@
 import { Dispatch, SetStateAction, createContext, useContext, useState } from "react";
-import { InitialDataDto } from "../api";
+import { AuthDataDto } from "../api";
 
 interface GlobalDataContextType {
-    globalData?: InitialDataDto,
-    setGlobalData: Dispatch<SetStateAction<InitialDataDto|undefined>>,
+    authData?: AuthDataDto,
+    setAuthData: Dispatch<SetStateAction<AuthDataDto|undefined>>,
 };
 
 const InitialDataContext = createContext<GlobalDataContextType>({
-    setGlobalData: async () => {},
+    setAuthData: async () => {},
 });
 
 export const InitialDataContextProvider: React.FCWC = (props) => {
 
-    const [data, setData] = useState<InitialDataDto>();
+    const [data, setData] = useState<AuthDataDto>();
 
     var providerValue:GlobalDataContextType = {
-        globalData: data,
-        setGlobalData: setData,
+        authData: data,
+        setAuthData: setData,
     };
 
     return (
@@ -26,12 +26,12 @@ export const InitialDataContextProvider: React.FCWC = (props) => {
     );
 };
 
-export const useGlobalDataContext = () => {
-    var { globalData, setGlobalData } = useContext(InitialDataContext);
+export const useAuthDataContext = () => {
+    var { authData, setAuthData } = useContext(InitialDataContext);
     return {
-        setGlobalData,
-        ...globalData,
-        cards: globalData?.cards ?? [],
-        persons: globalData?.persons ?? [],
+        setAuthData,
+        user: authData?.user,
+        cards: authData?.cards ?? [],
+        persons: authData?.persons ?? [],
     };
 };

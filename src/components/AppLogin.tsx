@@ -1,25 +1,25 @@
 import { Button, CircularProgress, Grid, TextField, Typography } from "@mui/material";
+import { FCWC, FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FCWC, FormEvent, useCallback, useEffect, useState } from "react";
-import { useGlobalDataContext } from "../context";
-import { useRequestControl } from "../shared/useRequestControl";
 import { API, setBearerToken } from "../api";
+import { useAuthDataContext } from "../context";
+import { useRequestControl } from "../shared/useRequestControl";
 
 const AppLogin: React.FC = () => {
 
-    const [password, setPassword] = useState<string>("");
-    const { setGlobalData } = useGlobalDataContext();
+    const [ password, setPassword ] = useState<string>("");
+    const { setAuthData } = useAuthDataContext();
 
     const { request, isLoading, error } = useRequestControl();
     const navigate = useNavigate();
 
-    const initializeApp = useCallback(async (signal:AbortSignal) => {
-        const globalData = await API.general.getInitialData(signal);
-        setGlobalData(globalData);
+    const initializeApp = async (signal:AbortSignal) => {
+        const globalData = await API.general.getAuthData(signal);
+        setAuthData(globalData);
         navigate("/");
-    }, [setGlobalData, navigate]);
+    };
 
-    const submiLogin = useCallback(async (signal:AbortSignal) => {
+    const submiLogin = async (signal:AbortSignal) => {
         if (!password) return;
 
         const token = await API.security.login(password);
@@ -27,12 +27,12 @@ const AppLogin: React.FC = () => {
         setBearerToken(token);
 
         await initializeApp(signal);
-    }, [password, initializeApp]);
+    };
 
-    const handleSubmit = useCallback((ev:FormEvent) => {
+    const handleSubmit = (ev:FormEvent) => {
         ev.preventDefault();
         request(submiLogin);
-    }, [request, submiLogin]);
+    };
 
     useEffect(() => {
         var token = sessionStorage.getItem("AuthToken");
@@ -40,9 +40,9 @@ const AppLogin: React.FC = () => {
             return;
         }
         setBearerToken(token);
-        
         request(initializeApp);
-    }, [request, initializeApp])
+        // eslint-disable-next-line
+    }, [])
 
     if (isLoading) {
         return (

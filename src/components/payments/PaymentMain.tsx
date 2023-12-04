@@ -1,11 +1,11 @@
+import { Button, Dialog, DialogContent, Divider, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import PaymentList from "./PaymentList";
+import { useEffect, useState } from "react";
 import { API, PaymentDto } from "../../api";
-import { useCallback, useEffect, useState } from "react";
-import { Button, Dialog, DialogContent, Divider, Typography } from "@mui/material";
-import PaymentForm from "./edit/PaymentForm";
 import { useRequestControl } from "../../shared/useRequestControl";
+import PaymentList from "./PaymentList";
+import PaymentForm from "./edit/PaymentForm";
 
 const PaymentMain = () => {
 
@@ -13,16 +13,16 @@ const PaymentMain = () => {
     const [openForm, setOpenForm] = useState(false);
     const { request, isLoading } = useRequestControl();
 
-    const fetchData = useCallback(async (signal:AbortSignal) => {
+    const fetchData = async (signal:AbortSignal) => {
         var resp = await API.payments.getList(signal);
         setData(resp);
-    }, [setData]);
+    };
 
-    const handleNewPayment = useCallback(() => {
+    const handleNewPayment = () => {
         setOpenForm(true);
-    }, [setOpenForm]);
+    };
 
-    const handleSavePayment = useCallback((newPayment:PaymentDto) => {
+    const handleSavePayment = (newPayment:PaymentDto) => {
         setData(prevData => {
             const index = prevData?.findIndex(dto => dto.id === newPayment.id);
             if (index >= 0) {
@@ -31,11 +31,12 @@ const PaymentMain = () => {
                 return [newPayment, ...prevData];
             }
         });
-    }, [setData]);
+    };
 
     useEffect(() => {
         request(fetchData);
-    }, [request, fetchData]);
+        // eslint-disable-next-line
+    }, []);
 
     if (isLoading) {
         return (

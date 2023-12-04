@@ -1,14 +1,14 @@
 import client from "../client";
-import { InitialDataDto } from "../models";
+import { AuthDataDto } from "../models";
 
 const URL = "api/general";
 
-const getInitialData = async (signal?:AbortSignal) => {
+const getAuthData = async (signal?:AbortSignal) => {
     const url = `${URL}/initial`;
-    const resp = await client.get<InitialDataDto>(url, { signal });
+    const resp = await client.get<AuthDataDto>(url, { signal });
     return resp.data;
 };
 
 export const general = {
-    getInitialData
+    getAuthData,
 };

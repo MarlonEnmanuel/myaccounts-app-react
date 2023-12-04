@@ -6,13 +6,13 @@ import Typography from "@mui/material/Typography";
 import Container from '@mui/material/Container'
 import { AppLoadingBar } from "./AppLoadingBar";
 import { Navigate, Outlet } from "react-router-dom";
-import { useGlobalDataContext } from "../../context";
+import { useAuthDataContext } from "../../context";
 
 const AppLayout: React.FC = () => {
 
-    const { loguedUser } = useGlobalDataContext();
+    const { user } = useAuthDataContext();
 
-    if (!loguedUser) {
+    if (!user) {
         return <Navigate to="/login" />;
     }
 
@@ -23,7 +23,7 @@ const AppLayout: React.FC = () => {
                 <Container>
                     <Toolbar disableGutters>
                         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                            Mis Cuentas
+                            Bienvenido {user.username}
                         </Typography>
                         <Button color="inherit">Logout</Button>
                     </Toolbar>

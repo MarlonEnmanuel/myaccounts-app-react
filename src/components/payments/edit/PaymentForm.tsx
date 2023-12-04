@@ -1,14 +1,14 @@
-import { Button, Chip, FormControl, FormHelperText, Grid, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
-import { Controller, SubmitErrorHandler, SubmitHandler, useFieldArray, useForm } from "react-hook-form";
-import { PaymentFormSchema, PaymentFormSchemaType } from "./validationSheme";
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Bookmark, Delete, PersonAdd } from "@mui/icons-material";
+import { Button, Chip, FormControl, FormHelperText, Grid, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
+import { Fragment } from "react";
+import { Controller, SubmitErrorHandler, SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import { API, PaymentDto, PaymentType } from "../../../api";
-import { Fragment, useCallback } from "react";
-import { Bookmark, Delete, PersonAdd } from "@mui/icons-material";
-import { useGlobalDataContext } from "../../../context";
+import { useAuthDataContext } from "../../../context";
 import { useRequestControl } from "../../../shared/useRequestControl";
+import { PaymentFormSchema, PaymentFormSchemaType } from "./validationSheme";
 
 interface PaymentFormProps {
     onSuccess: (dto:PaymentDto) => void;
@@ -16,26 +16,27 @@ interface PaymentFormProps {
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ onSuccess }) => {
 
-    const { loguedUser, cards, persons } = useGlobalDataContext();
+    const { cards, persons } = useAuthDataContext();
     const { request, isLoading } = useRequestControl();
 
     const { control, handleSubmit, register, watch, formState: { errors, isSubmitting } } = useForm<PaymentFormSchemaType>({
         resolver: zodResolver(PaymentFormSchema),
         defaultValues: {
             date: dayjs(),
-            paymentSplits: [{ personId: loguedUser?.personId, amount: 0 }],
+            paymentSplits: [{ personId: persons[0].id, amount: 0 }],
         },
     });
 
     const paymentSplits = useFieldArray({ control, name: 'paymentSplits' });
 
     const currentType = cards.find(c => c.id === watch('cardId'))?.type;
+
     const currentTotal = watch('paymentSplits')
                             .map(s => parseFloat(s.amount.toString()))
                             .filter(s => !isNaN(s))
                             .reduce((a, b) => a + b, 0);
 
-    const submitHandler: SubmitHandler<PaymentFormSchemaType> = useCallback((data) => {
+    const submitHandler: SubmitHandler<PaymentFormSchemaType> = (data) => {
         const submit = async (signal:AbortSignal) => {
             const dto = {
                 id: 0,
@@ -47,11 +48,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onSuccess }) => {
             onSuccess(resp);
         };
         request(submit);
-    }, [currentType, onSuccess, request]);
+    };
 
-    const submitErrorHandler: SubmitErrorHandler<PaymentFormSchemaType> = useCallback((errors) => {
+    const submitErrorHandler: SubmitErrorHandler<PaymentFormSchemaType> = (errors) => {
         console.log("Error de formulario", errors);
-    }, []);
+    };
 
     const formDisabled = isSubmitting || isLoading;
 
@@ -91,7 +92,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onSuccess }) => {
                                     <MenuItem value={0} disabled>Seleccione</MenuItem>
                                     {cards.map(c => 
                                         <MenuItem key={c.id} value={c.id}>
-                                            <Chip label={c.isDebit ? 'Débito' : 'Crédito'} size="small"/>
+                                            <Chip label={c.typeName} size="small"/>
                                             &nbsp;{c.name}
                                         </MenuItem>
                                     )}
